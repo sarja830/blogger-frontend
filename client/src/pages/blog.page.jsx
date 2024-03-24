@@ -8,6 +8,7 @@ import BlogInteraction from '../components/blog-interaction.component'
 import BlogPostCard from '../components/blog-post.component'
 import BlogContent from '../components/blog-content.component'
 import CommentContainer, { fetchComment } from '../components/comments.component'
+import MDEditor from "@uiw/react-md-editor";
 
 export const blogStructure = {
     title: '',
@@ -95,11 +96,12 @@ const BlogPage = () => {
 
                     <div className='my-12 font-gelasio blog-page-content'>
                         {
-                            content[0].blocks.map((block, i) =>{
-                                return <div className='my-4 md:my-8' key={i}>
-                                    <BlogContent block = {block}/>
-                                </div>
-                            })
+                            <MDEditor.Markdown source={content} style={{ whiteSpace: 'pre-wrap' }} />
+                            // content[0].blocks.map((block, i) =>{
+                            //     return <div className='my-4 md:my-8' key={i}>
+                            //         <BlogContent block = {block}/>
+                            //     </div>
+                            // })
                         }
 
                     </div>

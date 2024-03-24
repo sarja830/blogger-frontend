@@ -9,7 +9,7 @@ import axios from 'axios';
 const blogStructure = {
   title: '',
   banner: '',
-  content: [],
+  content: '',
   tags: [],
   des: '',
   author: { personal_info: { }}
