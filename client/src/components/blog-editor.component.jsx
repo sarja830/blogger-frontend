@@ -1,4 +1,5 @@
-import React, { useContext, useEffect, useState } from 'react'
+import  { useContext,useRef,useState,useCallback } from 'react'
+
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import lightLogo from '../imgs/logo-light.png'
 import darkLogo from '../imgs/logo-dark.png'
@@ -8,13 +9,21 @@ import darkBanner from '../imgs/blog banner dark.png'
 
 import {Toaster ,toast} from 'react-hot-toast'
 import { EditorContext } from '../pages/editor.pages'
-import EditorJS from '@editorjs/editorjs'
+
 import MDEditor from '@uiw/react-md-editor';
 import { tools } from './tools.component'
 import { uploadImage } from '../common/cloudinary'
 import axios from 'axios'
 import { ThemeContext, UserContext } from '../App'
+
+
+
+
+
+import * as editHelper from "./edit.jsx";
+
 const BlogEditor = () => {
+
 
     const navigate = useNavigate()
     let {blog_id} = useParams()
@@ -23,23 +32,10 @@ const BlogEditor = () => {
 
     let {theme} = useContext(ThemeContext)
     let {blog, blog: {title, banner, content, tags, des}, setBlog, textEditor, setTextEditor, setEditorState} = useContext(EditorContext)
-    const [value, setValue] = React.useState(content);
-    //
-    // useEffect(()=>{
-    //     console.log(content);
-    //     setValue(content);
-    // },[]);
+    const [value, setValue] = useState(content);
 
-    // useEffect(()=>{
-    //     if(!textEditor.isReady){
-    //         setTextEditor (new EditorJS({
-    //             holderId: "textEditor",
-    //             data: Array.isArray(content) ? content[0] : content,
-    //             tools: tools,
-    //             placeholder: "Let's write an awesome story"
-    //         }))
-    //     }
-    // },[])
+
+
     const handleChangeBanner = (e) =>{
         if(e.target.files[0]){
             let ladingTast = toast.loading('Uploading...')
@@ -121,6 +117,62 @@ const BlogEditor = () => {
         })
 
     }
+    // image support
+    const inputRef = useRef(null);
+    const editorRef = useRef(null);
+    const textApiRef = useRef(null);
+    const [isDrag, setIsDrag] = useState(false);
+
+    const [insertImg, setInsertImg] = useState("");
+
+    const inputImageHandler = useCallback(async (event) => {
+        if (event.target.files && event.target.files.length === 1) {
+            setInsertImg("");
+            let ladingTast = toast.loading('Uploading...')
+            try {
+
+
+                await editHelper.onImageUpload(event.target.files[0], textApiRef.current);
+                toast.dismiss(ladingTast)
+                toast.success("Uploaded Successfully")
+            }
+            catch {
+                toast.dismiss(ladingTast)
+                toast.error(err)
+            }
+            finally {
+                toast.dismiss(ladingTast);
+            }
+        }
+    }, []);
+
+    // Drag and Drop
+    const startDragHandler = (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        if (event.type === "dragenter") setIsDrag(true);
+    };
+
+    const dragHandler = (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        if (event.type === "dragenter" || event.type === "dragover") {
+            setIsDrag(true);
+        } else if (event.type === "dragleave") setIsDrag(false);
+    };
+
+    const dropHandler = useCallback(async (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        setIsDrag(false);
+        await editHelper.onImageDrop(event.dataTransfer, setMarkdown);
+    }, []);
+
+
+
+
+
+
     return (
         <>
             <nav className='navbar'>
@@ -154,18 +206,65 @@ const BlogEditor = () => {
                             onKeyDown={handleTitleKeyDown}
                             onChange={handleTitleChange}
                         >
-                    </textarea>
+                         </textarea>
                         <hr className='w-full opacity-10 my-5'/>
 
                         <div className="container">
-                            <MDEditor
-                                value={value}
-                                onChange={setValue}
-                            />
 
+
+
+                            <input
+                                ref={inputRef}
+                                className="hidden"
+                                type="file"
+                                accept=".jpg,.png,.jpeg,.jfif,.gif"
+                                name="Hello"
+                                value={insertImg}
+                                onChange={inputImageHandler}
+                            />
+                            <div onDragEnter={startDragHandler} className="relative">
+                                <MDEditor
+                                    height="100%"
+                                    ref={editorRef}
+                                    value={value}
+                                    onChange={(e) => setValue(e)}
+
+                                    extraCommands = {editHelper.editChoice(inputRef, textApiRef)}
+                                    // preview="edit"
+                                />
+                                {isDrag && (
+                                    <div
+                                        className="absolute bottom-0 left-0 right-0 top-0 h-full w-full bg-red-400 bg-opacity-20 "
+                                        onDrop={dropHandler}
+                                        onDragEnter={dragHandler}
+                                        onDragOver={dragHandler}
+                                        onDragLeave={dragHandler}
+                                    ></div>
+                                )}
+                            </div>
+
+
+
+
+
+
+
+                            {/*origininal*/}
+                            {/*<MDEditor*/}
+                            {/*    height="100%"*/}
+                            {/*    value={value}*/}
+                            {/*    onChange={setValue}*/}
+                            {/*    onPaste={async (event) => {*/}
+                            {/*        console.log(event);*/}
+                            {/*        console.log(event.clipboardData);*/}
+                            {/*        await onImagePasted(event.clipboardData, setValue);*/}
+                            {/*    }}*/}
+                            {/*    onDrop={async (event) => {*/}
+                            {/*        await onImagePasted(event.dataTransfer, setValue);*/}
+                            {/*    }}*/}
+                            {/*    // hideToolbar*/}
+                            {/*/>*/}
                         </div>
-                        {/*<div id="textEditor" className='font-gelasio'>*/}
-                        {/*</div>*/}
                     </div>
                 </section>
             </AnimationWrapper>

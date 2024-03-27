@@ -1,4 +1,4 @@
-const insertToTextArea = (intsertString) => {
+const insertToTextArea = (insertedString) => {
     const textarea = document.querySelector('textarea');
     if (!textarea) {
         return null;
@@ -12,10 +12,10 @@ const insertToTextArea = (intsertString) => {
     const front = sentence.slice(0, pos);
     const back = sentence.slice(pos, len);
 
-    sentence = front + intsertString + back;
+    sentence = front + insertedString + back;
 
     textarea.value = sentence;
-    textarea.selectionEnd = end + intsertString.length;
+    textarea.selectionEnd = end + insertedString.length;
 
     return sentence;
 };
